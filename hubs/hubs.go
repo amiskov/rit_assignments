@@ -30,18 +30,32 @@ func NewHubsDB(hubSize int) *HubsDB {
 	return &db
 }
 
-func (hdb *HubsDB) GetClientById(id string) (*client, error) {
-	cid, err := uuid.Parse(id)
+func (hdb *HubsDB) GetHubById(id string) (*hub, error) {
+	hUUID, err := uuid.Parse(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("bad hub id (%w)", err)
 	}
 
-	clientID := clientID(cid)
+	hub, ok := hdb.hubs[hubID(hUUID)]
+	if !ok {
+		return nil, fmt.Errorf("hub with id %q not found", id)
+	}
+
+	return hub, nil
+}
+
+func (hdb *HubsDB) GetClientById(id string) (*client, error) {
+	cUUID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("bad client id (%w)", err)
+	}
+
+	cID := clientID(cUUID)
 
 	// TODO: Optimise storage to find clients faster.
 	for _, hub := range hdb.hubs {
 		for _, client := range hub.clients {
-			if client.id == clientID {
+			if client.id == cID {
 				return client, nil
 			}
 		}

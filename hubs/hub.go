@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 )
 
 type hubID uuid.UUID
@@ -36,16 +35,14 @@ func (h *hub) Append(client *client) error {
 }
 
 // Sends a message to all clients of a hub
-func (h *hub) broadcast() {
-	for idx, c := range h.clients {
-		w, err := c.conn.NextWriter(websocket.TextMessage)
+func (h *hub) Broadcast() error {
+	for _, c := range h.clients {
+		err := c.SendMessage(fmt.Sprintf("Broadcasted from %s", h))
 		if err != nil {
-			panic("client failed")
+			return fmt.Errorf("failed broadcasting message to the Hub %q clients (%w)", h, err)
 		}
-		msg := fmt.Sprintf("sent from hub %d to client %d", -1, idx)
-		w.Write([]byte(msg))
-		w.Close()
 	}
+	return nil
 }
 
 func (h *hub) String() string {
