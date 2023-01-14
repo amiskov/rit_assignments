@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -27,6 +28,26 @@ func NewHubsDB(hubSize int) *HubsDB {
 
 	log.Printf("HubsDB storage created, current hub is %q.\n", db.hubs[db.currentHubID])
 	return &db
+}
+
+func (hdb *HubsDB) GetClientById(id string) (*client, error) {
+	cid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	clientID := clientID(cid)
+
+	// TODO: Optimise storage to find clients faster.
+	for _, hub := range hdb.hubs {
+		for _, client := range hub.clients {
+			if client.id == clientID {
+				return client, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("client with id %q not found", id)
 }
 
 func (hdb *HubsDB) Add(ws *websocket.Conn) {

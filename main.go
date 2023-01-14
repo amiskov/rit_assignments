@@ -47,32 +47,43 @@ func main() {
 
 	fmt.Println("starting server at :8080")
 	go http.ListenAndServe(":8080", nil)
-	console()
+	runConsole(hdb)
 }
 
-func console() {
+func runConsole(hdb *hubs.HubsDB) {
 	fmt.Println("Enter command or 'exit':")
 	for {
 		fmt.Printf("> ")
-		var cmd string
-		fmt.Scanln(&cmd)
+		var cmd, param string
+		fmt.Scanf("%s %s", &cmd, &param)
 
-		if strings.HasPrefix(cmd, "sendc ") {
-			fmt.Println("sending to the client")
-			continue
-		}
+		help := `Unknown command. Use 'send --hub=<hub id>', 'sendc --id=<client id>' or 'exit'.`
 
-		if strings.HasPrefix(cmd, "send ") {
-			fmt.Println("broadcasting to hub")
-			continue
-		}
-
-		if cmd == "exit" {
+		switch cmd {
+		case "sendc":
+			parts := strings.Split(param, "=")
+			if len(parts) < 2 {
+				fmt.Println("bad params", parts)
+				fmt.Println(help)
+				continue
+			}
+			client, err := hdb.GetClientById(parts[1])
+			if err != nil {
+				fmt.Println(err, help)
+			}
+			err = client.SendMessage(fmt.Sprintf("Hello, client #%s!", client))
+			if err != nil {
+				fmt.Printf("failed sending message to the client %q; %s", client, err)
+				continue
+			}
+			fmt.Println("sent to the client", client)
+		case "send":
+			fmt.Println("broadcasting to the hub", param)
+		case "exit":
 			fmt.Println("exiting...")
-			continue
+		default:
+			fmt.Println(help)
 		}
-
-		fmt.Println("Unknown command. Use `send --hub=<hub id>`, `sendc --id=<client id>` or `exit`.")
 	}
 }
 
