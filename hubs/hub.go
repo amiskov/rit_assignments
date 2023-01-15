@@ -11,7 +11,7 @@ type hubID uuid.UUID
 
 type hub struct {
 	id      hubID
-	size    int
+	size    int // TODO: move size checking into HubsDB
 	clients []*client
 }
 
@@ -25,6 +25,7 @@ func NewHub(size int) *hub {
 
 // TODO: We also have to handle WS disconnect for hubs
 func (h *hub) Append(client *client) error {
+	// TODO: move size checking into HubsDB
 	if len(h.clients) >= h.size {
 		fmt.Println(h, h.size)
 		return ErrLimitExceeded

@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// TODO: It's not concurrency-safe.
 type HubsDB struct {
 	currentHubID hubID
 	hubs         map[hubID]*hub

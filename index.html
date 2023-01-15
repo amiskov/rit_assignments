@@ -12,6 +12,7 @@
         const conn = new WebSocket("ws://127.0.0.1:8080/ws");
         conn.onmessage = event => insertMessage(JSON.parse(event.data));
         function insertMessage(msg) {
+            console.log(msg);
             const node = document.createElement("p");
             node.innerHTML = msg.message;
             document.getElementById("messages").appendChild(node);
