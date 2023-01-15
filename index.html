@@ -10,11 +10,10 @@
         <div id="messages"></div>
         <script>
         const conn = new WebSocket("ws://127.0.0.1:8080/ws");
-        conn.onmessage = event => insertMessage(JSON.parse(event.data));
+        conn.onmessage = event => insertMessage(event.data);
         function insertMessage(msg) {
-            console.log(msg);
             const node = document.createElement("p");
-            node.innerHTML = msg.message;
+            node.innerHTML = msg;
             document.getElementById("messages").appendChild(node);
         }
         </script>

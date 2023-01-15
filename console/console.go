@@ -59,8 +59,7 @@ func (c *console) Run() {
 				continue
 			}
 
-			hub.Broadcast()
-			fmt.Println("broadcasting to the hub", param)
+			hub.Broadcast(fmt.Sprintf("broadcasting to the hub %q", param))
 		case "exit":
 			fmt.Println("exiting...")
 		default:

@@ -3,6 +3,7 @@ package hubs
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -35,14 +36,23 @@ func (h *hub) Append(client *Client) error {
 	return nil
 }
 
+func (h *hub) ListClients() []*Client {
+	return h.clients
+}
+
 // Sends a message to all clients of a hub
-func (h *hub) Broadcast() error {
+func (h *hub) Broadcast(msg string) error {
+	var wg sync.WaitGroup
 	for _, c := range h.clients {
-		err := c.SendMessage(fmt.Sprintf("Broadcasted from %s", h))
+		wg.Add(1)
+		err := c.SendMessage(msg)
 		if err != nil {
 			return fmt.Errorf("failed broadcasting message to the Hub %q clients (%w)", h, err)
 		}
+		wg.Done()
 	}
+	wg.Wait()
+	log.Printf("Broadcasted message %q to %d clients of the hub %q\n", msg, len(h.clients), h)
 	return nil
 }
 

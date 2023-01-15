@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"ritsockets/hubs"
@@ -25,7 +24,7 @@ type hubsHandler struct {
 	db DB
 }
 
-func New(db DB) *hubsHandler {
+func NewWsHandler(db DB) *hubsHandler {
 	return &hubsHandler{
 		db: db,
 	}
@@ -51,37 +50,15 @@ func (h hubsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.db.Add(c)
 
-	// TODO: the body of `for` loop is actually don't used for this task.
-
+	// Dead simple echo server which sends the received message back to the client.
 	for {
-		_, m, err := ws.ReadMessage()
+		mt, message, err := ws.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			return
+			break
 		}
-
-		var in inbound
-		err = json.Unmarshal(m, &in)
+		err = ws.WriteMessage(mt, message)
 		if err != nil {
-			// handleError(ws, err)
-			log.Printf("error: %v", err)
-			continue
-		}
-
-		out, err := json.Marshal(outbound{Body: "Body of outbound message"})
-		if err != nil {
-			// handleError(ws, err)
-			log.Printf("error: %v", err)
-			continue
-		}
-
-		err = ws.WriteMessage(websocket.BinaryMessage, out)
-		if err != nil {
-			// handleError(ws, err)
-			log.Printf("error: %v", err)
-			continue
+			break
 		}
 	}
 }

@@ -1,8 +1,6 @@
 package hubs
 
 import (
-	"encoding/json"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -31,11 +29,7 @@ func (c *Client) SendMessage(msg string) error {
 		return err
 	}
 
-	data, _ := json.Marshal(map[string]string{
-		"message": msg,
-	})
-
-	w.Write(data)
+	w.Write([]byte(msg))
 	w.Close()
 	return nil
 }

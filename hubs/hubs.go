@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO: It's not concurrency-safe.
 type HubsDB struct {
 	currentHubID hubID
 	hubs         map[hubID]*hub
@@ -62,6 +61,14 @@ func (hdb *HubsDB) GetClientById(id string) (*Client, error) {
 	}
 
 	return nil, fmt.Errorf("client with id %q not found", id)
+}
+
+func (hdb HubsDB) ListHubs() []*hub {
+	var hubs []*hub
+	for _, h := range hdb.hubs {
+		hubs = append(hubs, h)
+	}
+	return hubs
 }
 
 func (hdb *HubsDB) Add(c *Client) {

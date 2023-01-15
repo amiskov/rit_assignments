@@ -15,7 +15,7 @@ const hubSize = 3
 func main() {
 	tmpl := template.Must(template.ParseFiles("index.html"))
 	wsHubs := hubs.NewHubsDB(hubSize)
-	wsHandler := handler.New(wsHubs)
+	wsHandler := handler.NewWsHandler(wsHubs)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, nil)
