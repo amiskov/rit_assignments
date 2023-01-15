@@ -9,16 +9,23 @@ import (
 
 type clientID uuid.UUID
 
-type client struct {
+type Client struct {
 	id   clientID
 	conn *websocket.Conn
 }
 
-func (c *client) String() string {
+func NewClient(conn *websocket.Conn) *Client {
+	return &Client{
+		id:   clientID(uuid.New()),
+		conn: conn,
+	}
+}
+
+func (c *Client) String() string {
 	return uuid.UUID(c.id).String()
 }
 
-func (c *client) SendMessage(msg string) error {
+func (c *Client) SendMessage(msg string) error {
 	w, err := c.conn.NextWriter(websocket.TextMessage)
 	if err != nil {
 		return err

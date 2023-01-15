@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 )
 
 // TODO: It's not concurrency-safe.
@@ -45,7 +44,7 @@ func (hdb *HubsDB) GetHubById(id string) (*hub, error) {
 	return hub, nil
 }
 
-func (hdb *HubsDB) GetClientById(id string) (*client, error) {
+func (hdb *HubsDB) GetClientById(id string) (*Client, error) {
 	cUUID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("bad client id (%w)", err)
@@ -65,18 +64,13 @@ func (hdb *HubsDB) GetClientById(id string) (*client, error) {
 	return nil, fmt.Errorf("client with id %q not found", id)
 }
 
-func (hdb *HubsDB) Add(ws *websocket.Conn) {
-	client := client{
-		id:   clientID(uuid.New()),
-		conn: ws,
-	}
-
+func (hdb *HubsDB) Add(c *Client) {
 	// Try to save to current hub
 	currentHub := hdb.hubs[hdb.currentHubID]
-	err := currentHub.Append(&client)
+	err := currentHub.Append(c)
 	if errors.Is(err, ErrLimitExceeded) {
 		newHub := NewHub(hdb.hubSize)
-		newHub.Append(&client)
+		newHub.Append(c)
 		hdb.hubs[newHub.id] = newHub
 		hdb.currentHubID = newHub.id
 		return
