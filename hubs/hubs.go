@@ -1,7 +1,6 @@
 package hubs
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -72,19 +71,15 @@ func (hdb HubsDB) ListHubs() []*hub {
 }
 
 func (hdb *HubsDB) Add(c *Client) {
-	// Try to save to current hub
 	currentHub := hdb.hubs[hdb.currentHubID]
-	err := currentHub.Append(c)
-	if errors.Is(err, ErrLimitExceeded) {
-		newHub := NewHub(hdb.hubSize)
-		newHub.Append(c)
-		hdb.hubs[newHub.id] = newHub
-		hdb.currentHubID = newHub.id
+
+	if len(currentHub.clients) < hdb.hubSize {
+		currentHub.Append(c)
 		return
 	}
 
-	if err != nil {
-		// TODO: improve error
-		log.Fatalln("failed to add new client to hub:", err)
-	}
+	newHub := NewHub(hdb.hubSize)
+	newHub.Append(c)
+	hdb.hubs[newHub.id] = newHub
+	hdb.currentHubID = newHub.id
 }

@@ -12,28 +12,19 @@ type hubID uuid.UUID
 
 type hub struct {
 	id      hubID
-	size    int // TODO: move size checking into HubsDB
 	clients []*Client
 }
 
 func NewHub(size int) *hub {
 	return &hub{
 		id:      hubID(uuid.New()),
-		size:    size,
 		clients: []*Client{},
 	}
 }
 
-// TODO: We also have to handle WS disconnect for hubs
-func (h *hub) Append(client *Client) error {
-	// TODO: move size checking into HubsDB
-	if len(h.clients) >= h.size {
-		fmt.Println(h, h.size)
-		return ErrLimitExceeded
-	}
+func (h *hub) Append(client *Client) {
 	h.clients = append(h.clients, client)
 	log.Printf("client %s was added to hub %s\n", client, h)
-	return nil
 }
 
 func (h *hub) ListClients() []*Client {
