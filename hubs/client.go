@@ -5,22 +5,20 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type clientID uuid.UUID
-
 type Client struct {
-	id   clientID
+	Id   uuid.UUID
 	conn *websocket.Conn
 }
 
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
-		id:   clientID(uuid.New()),
+		Id:   uuid.New(),
 		conn: conn,
 	}
 }
 
 func (c *Client) String() string {
-	return uuid.UUID(c.id).String()
+	return uuid.UUID(c.Id).String()
 }
 
 func (c *Client) SendMessage(msg string) error {

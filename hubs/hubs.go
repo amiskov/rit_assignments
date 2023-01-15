@@ -8,8 +8,8 @@ import (
 )
 
 type HubsDB struct {
-	currentHubID hubID
-	hubs         map[hubID]*hub
+	currentHubID uuid.UUID
+	hubs         map[uuid.UUID]*hub
 	hubSize      int
 }
 
@@ -18,7 +18,7 @@ func NewHubsDB(hubSize int) *HubsDB {
 
 	db := HubsDB{
 		currentHubID: currentHub.id,
-		hubs: map[hubID]*hub{
+		hubs: map[uuid.UUID]*hub{
 			currentHub.id: currentHub,
 		},
 		hubSize: hubSize,
@@ -29,12 +29,12 @@ func NewHubsDB(hubSize int) *HubsDB {
 }
 
 func (hdb *HubsDB) GetHubById(id string) (*hub, error) {
-	hUUID, err := uuid.Parse(id)
+	hubID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("bad hub id (%w)", err)
 	}
 
-	hub, ok := hdb.hubs[hubID(hUUID)]
+	hub, ok := hdb.hubs[hubID]
 	if !ok {
 		return nil, fmt.Errorf("hub with id %q not found", id)
 	}
@@ -43,17 +43,15 @@ func (hdb *HubsDB) GetHubById(id string) (*hub, error) {
 }
 
 func (hdb *HubsDB) GetClientById(id string) (*Client, error) {
-	cUUID, err := uuid.Parse(id)
+	clientID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("bad client id (%w)", err)
 	}
 
-	cID := clientID(cUUID)
-
 	// TODO: Optimise storage to find clients faster.
 	for _, hub := range hdb.hubs {
 		for _, client := range hub.clients {
-			if client.id == cID {
+			if client.Id == clientID {
 				return client, nil
 			}
 		}
@@ -70,16 +68,25 @@ func (hdb HubsDB) ListHubs() []*hub {
 	return hubs
 }
 
+func (hdb HubsDB) ListAllClients() []*Client {
+	var clients []*Client
+	hubs := hdb.ListHubs()
+	for _, h := range hubs {
+		clients = append(clients, h.clients...)
+	}
+	return clients
+}
+
 func (hdb *HubsDB) Add(c *Client) {
 	currentHub := hdb.hubs[hdb.currentHubID]
 
 	if len(currentHub.clients) < hdb.hubSize {
-		currentHub.Append(c)
+		currentHub.Add(c)
 		return
 	}
 
 	newHub := NewHub(hdb.hubSize)
-	newHub.Append(c)
+	newHub.Add(c)
 	hdb.hubs[newHub.id] = newHub
 	hdb.currentHubID = newHub.id
 }
