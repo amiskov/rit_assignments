@@ -3,9 +3,10 @@ package handler
 import (
 	"log"
 	"net/http"
-	"ritsockets/hubs"
 
 	"github.com/gorilla/websocket"
+
+	"ritsockets/hubs"
 )
 
 var upgrader = websocket.Upgrader{
@@ -16,23 +17,18 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type DB interface {
+type Storage interface {
 	Add(*hubs.Client)
 }
 
 type hubsHandler struct {
-	db DB
+	db Storage
 }
 
-func NewWsHandler(db DB) *hubsHandler {
+func NewWsHandler(db Storage) *hubsHandler {
 	return &hubsHandler{
 		db: db,
 	}
-}
-
-type inbound struct{}
-type outbound struct {
-	Body string `json:"body"`
 }
 
 func (h hubsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

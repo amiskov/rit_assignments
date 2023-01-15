@@ -2,17 +2,23 @@ package console
 
 import (
 	"fmt"
-	"ritsockets/hubs"
 	"strings"
+
+	"ritsockets/hubs"
 )
 
-type console struct {
-	hdb *hubs.HubsDB
+type Storage interface {
+	GetHubById(string) (*hubs.Hub, error)
+	GetClientById(string) (*hubs.Client, error)
 }
 
-func New(hdb *hubs.HubsDB) *console {
+type console struct {
+	db Storage
+}
+
+func New(db Storage) *console {
 	return &console{
-		hdb: hdb,
+		db: db,
 	}
 }
 
@@ -33,7 +39,7 @@ func (c *console) Run() {
 				continue
 			}
 
-			client, err := c.hdb.GetClientById(clientIdParam)
+			client, err := c.db.GetClientById(clientIdParam)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -53,7 +59,7 @@ func (c *console) Run() {
 				continue
 			}
 
-			hub, err := c.hdb.GetHubById(hubIdParam)
+			hub, err := c.db.GetHubById(hubIdParam)
 			if err != nil {
 				fmt.Println("Failed to get Hub by ID: ", err)
 				continue

@@ -3,22 +3,25 @@ package hubs
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/google/uuid"
 )
 
-type HubsDB struct {
+type Storage struct {
+	mx sync.RWMutex
+
 	currentHubID uuid.UUID
-	hubs         map[uuid.UUID]*hub
+	hubs         map[uuid.UUID]*Hub
 	hubSize      int
 }
 
-func NewHubsDB(hubSize int) *HubsDB {
+func NewHubsDB(hubSize int) *Storage {
 	currentHub := NewHub(hubSize)
 
-	db := HubsDB{
+	db := Storage{
 		currentHubID: currentHub.id,
-		hubs: map[uuid.UUID]*hub{
+		hubs: map[uuid.UUID]*Hub{
 			currentHub.id: currentHub,
 		},
 		hubSize: hubSize,
@@ -28,27 +31,30 @@ func NewHubsDB(hubSize int) *HubsDB {
 	return &db
 }
 
-func (hdb *HubsDB) GetHubById(id string) (*hub, error) {
+func (hdb *Storage) GetHubById(id string) (*Hub, error) {
 	hubID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("bad hub id (%w)", err)
 	}
 
+	hdb.mx.RLock()
 	hub, ok := hdb.hubs[hubID]
 	if !ok {
 		return nil, fmt.Errorf("hub with id %q not found", id)
 	}
+	hdb.mx.RUnlock()
 
 	return hub, nil
 }
 
-func (hdb *HubsDB) GetClientById(id string) (*Client, error) {
+func (hdb *Storage) GetClientById(id string) (*Client, error) {
 	clientID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("bad client id (%w)", err)
 	}
 
 	// TODO: Optimise storage to find clients faster.
+	hdb.mx.RLock()
 	for _, hub := range hdb.hubs {
 		for _, client := range hub.clients {
 			if client.Id == clientID {
@@ -56,28 +62,36 @@ func (hdb *HubsDB) GetClientById(id string) (*Client, error) {
 			}
 		}
 	}
+	hdb.mx.RUnlock()
 
 	return nil, fmt.Errorf("client with id %q not found", id)
 }
 
-func (hdb HubsDB) ListHubs() []*hub {
-	var hubs []*hub
+func (hdb *Storage) ListHubs() []*Hub {
+	var hubs []*Hub
+	hdb.mx.Lock()
+	defer hdb.mx.Unlock()
 	for _, h := range hdb.hubs {
 		hubs = append(hubs, h)
 	}
 	return hubs
 }
 
-func (hdb HubsDB) ListAllClients() []*Client {
+func (hdb *Storage) ListAllClients() []*Client {
 	var clients []*Client
 	hubs := hdb.ListHubs()
+
+	hdb.mx.RLock()
+	defer hdb.mx.RUnlock()
 	for _, h := range hubs {
 		clients = append(clients, h.clients...)
 	}
 	return clients
 }
 
-func (hdb *HubsDB) Add(c *Client) {
+func (hdb *Storage) Add(c *Client) {
+	hdb.mx.Lock()
+	defer hdb.mx.Unlock()
 	currentHub := hdb.hubs[hdb.currentHubID]
 
 	if len(currentHub.clients) < hdb.hubSize {

@@ -2,11 +2,12 @@ package handler
 
 import (
 	"net/http/httptest"
-	"ritsockets/hubs"
 	"strings"
 	"testing"
 
 	"github.com/gorilla/websocket"
+
+	"ritsockets/hubs"
 )
 
 func TestHubs(t *testing.T) {
@@ -155,7 +156,10 @@ func TestSendToClient(t *testing.T) {
 
 			// Send a message to the spawned client
 			client := db.ListHubs()[0].ListClients()[0]
-			client.SendMessage(tt.msg)
+			err = client.SendMessage(tt.msg)
+			if err != nil {
+				t.Fatalf("failed sending message to the client (%v)", err)
+			}
 
 			// Received message from the WS echo server should be the same as sent.
 			_, p, err := wsClients[0].ReadMessage()
