@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Storage struct {
+type HubsStorage struct {
 	mx sync.RWMutex
 
 	currentHubID uuid.UUID
@@ -16,10 +16,10 @@ type Storage struct {
 	hubSize      int
 }
 
-func NewHubsDB(hubSize int) *Storage {
+func NewHubsStorage(hubSize int) *HubsStorage {
 	currentHub := NewHub(hubSize)
 
-	db := Storage{
+	db := HubsStorage{
 		currentHubID: currentHub.id,
 		hubs: map[uuid.UUID]*Hub{
 			currentHub.id: currentHub,
@@ -31,7 +31,7 @@ func NewHubsDB(hubSize int) *Storage {
 	return &db
 }
 
-func (hdb *Storage) GetHubById(id string) (*Hub, error) {
+func (hdb *HubsStorage) GetHubById(id string) (*Hub, error) {
 	hubID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("bad hub id (%w)", err)
@@ -47,7 +47,7 @@ func (hdb *Storage) GetHubById(id string) (*Hub, error) {
 	return hub, nil
 }
 
-func (hdb *Storage) GetClientById(id string) (*Client, error) {
+func (hdb *HubsStorage) GetClientById(id string) (*Client, error) {
 	clientID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("bad client id (%w)", err)
@@ -67,7 +67,7 @@ func (hdb *Storage) GetClientById(id string) (*Client, error) {
 	return nil, fmt.Errorf("client with id %q not found", id)
 }
 
-func (hdb *Storage) ListHubs() []*Hub {
+func (hdb *HubsStorage) ListHubs() []*Hub {
 	var hubs []*Hub
 	hdb.mx.Lock()
 	defer hdb.mx.Unlock()
@@ -77,7 +77,7 @@ func (hdb *Storage) ListHubs() []*Hub {
 	return hubs
 }
 
-func (hdb *Storage) ListAllClients() []*Client {
+func (hdb *HubsStorage) ListAllClients() []*Client {
 	var clients []*Client
 	hubs := hdb.ListHubs()
 
@@ -89,7 +89,7 @@ func (hdb *Storage) ListAllClients() []*Client {
 	return clients
 }
 
-func (hdb *Storage) Add(c *Client) {
+func (hdb *HubsStorage) Add(c *Client) {
 	hdb.mx.Lock()
 	defer hdb.mx.Unlock()
 	currentHub := hdb.hubs[hdb.currentHubID]

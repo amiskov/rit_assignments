@@ -46,7 +46,7 @@ func TestHubs(t *testing.T) {
 
 	for _, tt := range suite {
 		t.Run(tt.name, func(t *testing.T) {
-			db := hubs.NewHubsDB(tt.hubSize)
+			db := hubs.NewHubsStorage(tt.hubSize)
 			wsHandler := NewWsHandler(db)
 
 			s := httptest.NewServer(wsHandler)
@@ -88,7 +88,7 @@ func TestBroadcast(t *testing.T) {
 
 	for _, tt := range suite {
 		t.Run(tt.name, func(t *testing.T) {
-			db := hubs.NewHubsDB(tt.hubSize)
+			db := hubs.NewHubsStorage(tt.hubSize)
 			wsHandler := NewWsHandler(db)
 
 			s := httptest.NewServer(wsHandler)
@@ -141,7 +141,7 @@ func TestSendToClient(t *testing.T) {
 
 	for _, tt := range suite {
 		t.Run(tt.name, func(t *testing.T) {
-			db := hubs.NewHubsDB(tt.hubSize)
+			db := hubs.NewHubsStorage(tt.hubSize)
 			wsHandler := NewWsHandler(db)
 
 			s := httptest.NewServer(wsHandler)
