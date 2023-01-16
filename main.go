@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -10,11 +11,13 @@ import (
 	"ritsockets/hubs"
 )
 
-const hubSize = 3
+var hubSize = flag.Int("s", 3, "hub size")
 
 func main() {
+	flag.Parse()
+
 	tmpl := template.Must(template.ParseFiles("index.html"))
-	wsHubs := hubs.NewHubsStorage(hubSize)
+	wsHubs := hubs.NewHubsStorage(*hubSize)
 	wsHandler := handler.NewWsHandler(wsHubs)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -2,7 +2,7 @@ package console
 
 import (
 	"fmt"
-	"strings"
+	"log"
 
 	"ritsockets/hubs"
 )
@@ -23,61 +23,39 @@ func New(db Storage) *console {
 }
 
 func (c *console) Run() {
-	fmt.Println("Enter command or 'exit':")
+	fmt.Println("Enter command:")
 	for {
 		fmt.Printf("> ")
-		var cmd, param string
-		fmt.Scanf("%s %s", &cmd, &param)
+		var cmd, id string
+		fmt.Scanf("%s %s", &cmd, &id)
 
 		switch cmd {
 		case "help":
-			fmt.Println("Usage:\n send --hub=<hub id>\n sendc --id=<client id>\n exit")
+			fmt.Println("Usage:\n send HUB_ID\n sendc CLIENT_ID")
 		case "sendc":
-			clientIdParam, err := parseCommandParam(param)
+			client, err := c.db.GetClientById(id)
 			if err != nil {
-				fmt.Println("bad client id:", param)
-				continue
-			}
-
-			client, err := c.db.GetClientById(clientIdParam)
-			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
 
 			err = client.SendMessage(fmt.Sprintf("Hello, client #%s!", client))
 			if err != nil {
-				fmt.Printf("failed sending message to the client %q; %s\n", client, err)
+				log.Printf("failed sending message to the client %q; %s\n", client, err)
 				continue
 			}
 
 			fmt.Println("Message sent to the client", client)
 		case "send":
-			hubIdParam, err := parseCommandParam(param)
+			hub, err := c.db.GetHubById(id)
 			if err != nil {
-				fmt.Println("bad hub id:", param)
+				log.Println("Failed to get Hub by ID: ", err)
 				continue
 			}
 
-			hub, err := c.db.GetHubById(hubIdParam)
-			if err != nil {
-				fmt.Println("Failed to get Hub by ID: ", err)
-				continue
-			}
-
-			hub.Broadcast(fmt.Sprintf("broadcasting to the hub %q", param))
-		case "exit":
-			fmt.Println("exiting...")
+			hub.Broadcast(fmt.Sprintf("broadcasting to the hub %s", id))
 		default:
 			fmt.Printf("Unknown command %q\n", cmd)
 		}
 	}
-}
-
-func parseCommandParam(param string) (string, error) {
-	parts := strings.Split(param, "=")
-	if len(parts) < 2 {
-		return "", fmt.Errorf("bad params %v", parts)
-	}
-	return parts[1], nil
 }

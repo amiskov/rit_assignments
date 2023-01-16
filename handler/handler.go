@@ -19,6 +19,7 @@ var upgrader = websocket.Upgrader{
 
 type Storage interface {
 	Add(*hubs.Client)
+	Remove(*hubs.Client)
 }
 
 type hubsHandler struct {
@@ -41,6 +42,7 @@ func (h hubsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		ws.Close()
+		h.db.Remove(c)
 		log.Printf("connection is closed for client %q\n", c)
 	}()
 

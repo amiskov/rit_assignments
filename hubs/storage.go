@@ -27,7 +27,7 @@ func NewHubsStorage(hubSize int) *HubsStorage {
 		hubSize: hubSize,
 	}
 
-	log.Printf("HubsDB storage created, current hub is %q.\n", db.hubs[db.currentHubID])
+	log.Printf("HubsStorage created, current hub is %q of size %d.\n", db.hubs[db.currentHubID], hubSize)
 	return &db
 }
 
@@ -87,6 +87,19 @@ func (hdb *HubsStorage) ListAllClients() []*Client {
 		clients = append(clients, h.clients...)
 	}
 	return clients
+}
+
+func (hdb *HubsStorage) Remove(c *Client) {
+	hdb.mx.Lock()
+	defer hdb.mx.Unlock()
+	for _, hub := range hdb.hubs {
+		for i, client := range hub.clients {
+			if client.Id == c.Id {
+				hub.clients = append(hub.clients[:i], hub.clients[i+1:]...)
+				return
+			}
+		}
+	}
 }
 
 func (hdb *HubsStorage) Add(c *Client) {
